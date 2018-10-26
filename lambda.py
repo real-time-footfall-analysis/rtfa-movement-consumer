@@ -13,24 +13,38 @@ def lambda_handler(event, context):
     #    invoke_self_async(event, context)
     #    return
 
-    # Get a handle to the table
-    dynamo_db = boto3.resource('dynamodb')
-    curr_pos_table = dynamo_db.Table('current_position')
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
-    # Decode the data from base 64 and then put it into JSON
+    # Decode the bytes to base64
+    decoded_record_data = []
+    for record in event['Records']:
+        try:
+            decoded_record_data.append(base64.b64decode(record['kinesis']['data']))
+        except Exception as e:
+            logger.error('%s - %s', "Error decoding record", e)
+
+    # Deserialize the data
+    deserialized_data = []
+    for decoded_record in decoded_record_data:
+        try:
+            deserialized_data.append(json.loads(decoded_record))
+        except Exception as e:
+            logger.error('%s - %s', "Error deserializing data", e)
+
+    # Try opening a connection to DynamoDB
     try:
-        decoded_record_data = [base64.b64decode(record['kinesis']['data']) for record in event['Records']]
-        deserialized_data = [json.loads(decoded_record) for decoded_record in decoded_record_data]
-
+        # Get a handle to the table
+        dynamo_db = boto3.resource('dynamodb')
+        curr_pos_table = dynamo_db.Table('current_position')
     except Exception as e:
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        logger.error(e)
+        logger.error('%s - %s', "Error connecting to DynamoDB", e)
         return
 
     # Need a unique sequence guaranteed not to appear in any of the fields
     delimiter = '-%-'
 
+    # Try putting the data in Dynamo DB
     try:
         # Insert each item in to the database
         with curr_pos_table.batch_writer() as batch_writer:
@@ -54,8 +68,8 @@ def lambda_handler(event, context):
                         }
                     )
 
-    except:
-        return
+    except Exception as e:
+        logger.error('%s - %s', "Error bulk transmitting data", e)
 
 
 def invoke_self_async(event, context):
