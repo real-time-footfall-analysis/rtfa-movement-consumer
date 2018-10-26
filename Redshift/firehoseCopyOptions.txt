@@ -1,0 +1,1 @@
+json 's3://movement-log-intermediary/jsonpaths.json' region 'eu-central-1';

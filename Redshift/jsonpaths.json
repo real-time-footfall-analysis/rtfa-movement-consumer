@@ -1,0 +1,8 @@
+{
+    "jsonpaths": [
+        "$.uuid",
+        "$.eventId",
+        "$.regionId",
+        "$.entering"
+    ]
+}
