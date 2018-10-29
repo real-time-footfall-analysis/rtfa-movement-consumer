@@ -1,0 +1,8 @@
+create table log (
+    uuid char(36) not null,
+    eventId integer not null,
+    regionId integer not null,
+    entering bool not null,
+    timestamp integer not null,
+    PRIMARY KEY(uuid, eventId, regionId, entering, timestamp)
+);

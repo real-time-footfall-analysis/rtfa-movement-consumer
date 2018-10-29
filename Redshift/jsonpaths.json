@@ -3,6 +3,7 @@
         "$.uuid",
         "$.eventId",
         "$.regionId",
-        "$.entering"
+        "$.entering",
+        "$.timestamp"	
     ]
 }
