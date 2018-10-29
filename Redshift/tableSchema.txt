@@ -3,6 +3,6 @@ create table log (
     eventId integer not null,
     regionId integer not null,
     entering bool not null,
-    timestamp integer not null,
-    PRIMARY KEY(uuid, eventId, regionId, entering, timestamp)
+    occurredAt integer not null,
+    PRIMARY KEY(uuid, eventId, regionId, entering, occurredAt)
 );

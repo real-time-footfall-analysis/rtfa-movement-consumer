@@ -4,6 +4,6 @@
         "$.eventId",
         "$.regionId",
         "$.entering",
-        "$.timestamp"	
+        "$.occurredAt"	
     ]
 }
