@@ -41,11 +41,22 @@ def lambda_handler(event, context):
         logger.error('%s - %s', "Error connecting to DynamoDB", e)
         return
 
-    # Need a unique sequence guaranteed not to appear in any of the fields
+    # Try sending the data
+    transmit_data(curr_pos_table, deserialized_data, 0)
+
+
+def transmit_data(curr_pos_table, deserialized_data, depth):
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    if depth > 3:
+        logger.error("Depth exceeded trying to split data.")
+        return
+
     delimiter = '-%-'
 
-    # Try putting the data in Dynamo DB
-    try:
+    try :
         # Insert each item in to the database
         with curr_pos_table.batch_writer() as batch_writer:
 
@@ -59,7 +70,6 @@ def lambda_handler(event, context):
 
                 # Insert or remove from table
                 if movement_event['entering']:
-                    del movement_event['entering']
                     batch_writer.put_item(Item=movement_event)
                 else:
                     batch_writer.delete_item(
@@ -69,7 +79,13 @@ def lambda_handler(event, context):
                     )
 
     except Exception as e:
-        logger.error('%s - %s', "Error bulk transmitting data", e)
+        logger.info('%s - %s', "Error bulk transmitting - retrying in halves", e)
+
+        halfway = len(deserialized_data) // 2
+        transmit_data(curr_pos_table, deserialized_data[:halfway], depth+1)
+        transmit_data(curr_pos_table, deserialized_data[halfway:], depth+1)
+
+
 
 
 def invoke_self_async(event, context):
